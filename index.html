@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redeem Coupon</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%; background: #2a2a2a;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #card {
+      background: #fff; border-radius: 12px;
+      padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      text-align: center; width: 90%; max-width: 320px;
+    }
+    #card h1 {
+      font-size: 1.25rem; margin-bottom: 1rem; color: #333;
+    }
+    #redeem {
+      background: #ff7f2a; border: none; color: #fff;
+      padding: 0.75rem 1.5rem; font-size: 1rem;
+      border-radius: 6px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    #redeem:disabled {
+      background: #ccc; cursor: default;
+    }
+    #redeem:hover:not(:disabled) {
+      background: #e76b1a;
+    }
+  </style>
+</head>
+<body>
+  <div id="card">
+    <h1>Click Below to Redeem Your Coupon!</h1>
+    <button id="redeem">Redeem Coupon</button>
+  </div>
+
+  <!-- FingerprintJS library -->
+  <script src="https://cdn.jsdelivr.net/npm/fingerprintjs@3/dist/fp.min.js"></script>
+  <script>
+    (async () => {
+      // 1. Load FingerprintJS and get the visitor ID
+      const fp = await FingerprintJS.load();
+      const result = await fp.get();
+      const deviceId = result.visitorId;
+
+      // 2. Wire up the button
+      const btn = document.getElementById('redeem');
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+
+        // ←– Paste your Apps Script URL here:
+        const EXEC_URL = 'https://script.google.com/macros/s/AKfycbyjn37dGtEjjBa1FwPPA2xTZvXt2t--nU7evjLEyND8-nW8h3IpS8vDOhWN2_CPfGF_hg/exec';
+
+        try {
+          const res = await fetch(`${EXEC_URL}?deviceId=${deviceId}`);
+          const json = await res.json();
+
+          if (json.status === 'success') {
+            btn.textContent = 'Redeemed';
+          } else if (json.status === 'already_redeemed') {
+            btn.textContent = 'Already Redeemed';
+          } else {
+            btn.textContent = 'Error';
+          }
+        } catch (e) {
+          btn.textContent = 'Error';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
