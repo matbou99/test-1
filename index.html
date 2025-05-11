@@ -11,32 +11,21 @@
       display: flex; align-items: center; justify-content: center;
     }
     #card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      text-align: center;
-      width: 90%;
-      max-width: 320px;
+      background: #fff; border-radius: 12px;
+      padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      text-align: center; width: 90%; max-width: 320px;
     }
     #card h1 {
-      font-size: 1.25rem;
-      margin-bottom: 1rem;
-      color: #333;
+      font-size: 1.25rem; margin-bottom: 1rem; color: #333;
     }
     #redeem {
-      background: #ff7f2a;
-      border: none;
-      color: #fff;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      border-radius: 6px;
-      cursor: pointer;
+      background: #ff7f2a; border: none; color: #fff;
+      padding: 0.75rem 1.5rem; font-size: 1rem;
+      border-radius: 6px; cursor: pointer;
       transition: background 0.2s;
     }
     #redeem:disabled {
-      background: #ccc;
-      cursor: default;
+      background: #ccc; cursor: default;
     }
     #redeem:hover:not(:disabled) {
       background: #e76b1a;
@@ -55,36 +44,33 @@
     // Initialize FingerprintJS
     const fpPromise = FingerprintJS.load();
 
-    // When the user clicks "Redeem Coupon"…
-    document.getElementById('redeem')
-      .addEventListener('click', async function() {
-        const btn = this;
-        btn.disabled = true;
-        btn.textContent = 'Loading…';
+    document.getElementById('redeem').addEventListener('click', async function() {
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
 
-        try {
-          const fp = await fpPromise;      // load the agent
-          const result = await fp.get();   // get visitorId
-          const visitorId = result.visitorId;
+      // Get the visitor identifier
+      const fp = await fpPromise;
+      const result = await fp.get();
+      const visitorID = result.visitorId;
 
-          // **Option A: Send to your backend**
-          // await fetch('https://your-api.example.com/redeem', {
-          //   method: 'POST',
-          //   headers: { 'Content-Type': 'application/json' },
-          //   body: JSON.stringify({ visitorId })
-          // });
+      // Send it to Apps Script
+      const resp = await fetch(
+        'https://script.google.com/macros/s/AKfycbxNQQRVIvmmJUp1XVYOP26pVYQs0euVmfBigJjzuol17sYev-m9MMwe2F8UPYoVqTysJg/exec'
+        + '?visitorID=' + encodeURIComponent(visitorID),
+        { method: 'GET' }
+      );
+      const data = await resp.json();
 
-          // **Option B: Just show it for now**
-          alert('Your fingerprint ID is:\n' + visitorId);
-
-          btn.textContent = 'Redeemed';
-        } catch (err) {
-          console.error(err);
-          alert('An error occurred; check console.');
-          btn.disabled = false;
-          btn.textContent = 'Redeem Coupon';
-        }
-      });
+      // Reflect the result
+      if (data.status === 'success') {
+        btn.textContent = '✓ Coupon Redeemed';
+      } else if (data.status === 'duplicate') {
+        btn.textContent = '⚠️ Already Redeemed';
+      } else {
+        btn.textContent = '❌ Error';
+      }
+    });
   </script>
 </body>
 </html>
