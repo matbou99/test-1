@@ -44,24 +44,26 @@
     // 1) Initialize FingerprintJS
     const fpPromise = FingerprintJS.load();
 
-    // 2) Paste here your Apps Script Web App URL:
+    // 2) Your Apps Script webapp URL (make sure you've deployed with "Anyone, even anonymous")
     const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxNQQRVIvmmJUp1XVYOP26pVYQs0euVmfBigJjzuol17sYev-m9MMwe2F8UPYoVqTysJg/exec';
 
+    // 3) Wire up the button
     document.getElementById('redeem').addEventListener('click', async function() {
       const btn = this;
       btn.disabled = true;
       btn.textContent = 'Loading…';
 
       try {
-        // 3) Get the stable visitor identifier
+        // get the stable visitor ID
         const fp = await fpPromise;
-        const { visitorId } = await fp.get();
+        const result = await fp.get();
+        const visitorID = result.visitorId;
 
-        // 4) Fire it off to your Apps Script endpoint (no JSON response needed here)
-        await fetch(`${WEBAPP_URL}?visitorID=${visitorId}`, { mode: 'no-cors' });
+        // fire it off without CORS (no JSON back)
+        const resp = await fetch(`${WEBAPP_URL}?visitorID=${visitorID}`, { mode: 'no-cors' });
 
-        // 5) Show success immediately
-        btn.textContent = '✅ Redeemed!';
+        // we can’t parse JSON in no-cors mode, but if we got here it means success
+        btn.textContent = '✔ Redeemed!';
       }
       catch (err) {
         console.error(err);
