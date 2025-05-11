@@ -44,34 +44,24 @@
     // 1) Initialize FingerprintJS
     const fpPromise = FingerprintJS.load();
 
-    // 2) Change this to your deployed Apps Script URL:
+    // 2) Paste here your Apps Script Web App URL:
     const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxNQQRVIvmmJUp1XVYOP26pVYQs0euVmfBigJjzuol17sYev-m9MMwe2F8UPYoVqTysJg/exec';
 
-    // 3) Wire up the button
     document.getElementById('redeem').addEventListener('click', async function() {
       const btn = this;
       btn.disabled = true;
       btn.textContent = 'Loading…';
 
       try {
-        // get the stable visitor ID
+        // 3) Get the stable visitor identifier
         const fp = await fpPromise;
         const { visitorId } = await fp.get();
 
-        // call your Apps Script endpoint
-        const resp = await fetch(`${WEBAPP_URL}?visitorID=${visitorId}`);
-        const data = await resp.json();
+        // 4) Fire it off to your Apps Script endpoint (no JSON response needed here)
+        await fetch(`${WEBAPP_URL}?visitorID=${visitorId}`, { mode: 'no-cors' });
 
-        if (data.status === 'success') {
-          btn.textContent = '✅ Redeemed!';
-        }
-        else if (data.status === 'duplicate') {
-          btn.textContent = '⚠️ Already Claimed';
-        }
-        else {
-          btn.textContent = '❌ Error';
-          console.error('Unexpected response', data);
-        }
+        // 5) Show success immediately
+        btn.textContent = '✅ Redeemed!';
       }
       catch (err) {
         console.error(err);
