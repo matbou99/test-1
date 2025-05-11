@@ -41,33 +41,40 @@
   <!-- FingerprintJS v3 -->
   <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
   <script>
-    // Initialize FingerprintJS
+    // 1) Initialize FingerprintJS
     const fpPromise = FingerprintJS.load();
 
+    // 2) Change this to your deployed Apps Script URL:
+    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxNQQRVIvmmJUp1XVYOP26pVYQs0euVmfBigJjzuol17sYev-m9MMwe2F8UPYoVqTysJg/exec';
+
+    // 3) Wire up the button
     document.getElementById('redeem').addEventListener('click', async function() {
       const btn = this;
       btn.disabled = true;
       btn.textContent = 'Loading…';
 
-      // Get the visitor identifier
-      const fp = await fpPromise;
-      const result = await fp.get();
-      const visitorID = result.visitorId;
+      try {
+        // get the stable visitor ID
+        const fp = await fpPromise;
+        const { visitorId } = await fp.get();
 
-      // Send it to Apps Script
-      const resp = await fetch(
-        'https://script.google.com/macros/s/AKfycbxNQQRVIvmmJUp1XVYOP26pVYQs0euVmfBigJjzuol17sYev-m9MMwe2F8UPYoVqTysJg/exec'
-        + '?visitorID=' + encodeURIComponent(visitorID),
-        { method: 'GET' }
-      );
-      const data = await resp.json();
+        // call your Apps Script endpoint
+        const resp = await fetch(`${WEBAPP_URL}?visitorID=${visitorId}`);
+        const data = await resp.json();
 
-      // Reflect the result
-      if (data.status === 'success') {
-        btn.textContent = '✓ Coupon Redeemed';
-      } else if (data.status === 'duplicate') {
-        btn.textContent = '⚠️ Already Redeemed';
-      } else {
+        if (data.status === 'success') {
+          btn.textContent = '✅ Redeemed!';
+        }
+        else if (data.status === 'duplicate') {
+          btn.textContent = '⚠️ Already Claimed';
+        }
+        else {
+          btn.textContent = '❌ Error';
+          console.error('Unexpected response', data);
+        }
+      }
+      catch (err) {
+        console.error(err);
         btn.textContent = '❌ Error';
       }
     });
