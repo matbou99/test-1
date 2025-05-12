@@ -6,41 +6,24 @@
   <title>Redeem Coupon</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #2a2a2a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      margin: 0; padding: 0;
+      height: 100%; background: #2a2a2a;
+      display: flex; align-items: center; justify-content: center;
     }
     #card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      text-align: center;
-      width: 90%;
-      max-width: 320px;
+      background: #fff; border-radius: 12px;
+      padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      text-align: center; width: 90%; max-width: 320px;
     }
-    #card h1 {
-      font-size: 1.25rem;
-      margin-bottom: 1rem;
-      color: #333;
-    }
+    #card h1 { font-size: 1.25rem; margin-bottom: 1rem; color: #333; }
     #redeem {
-      background: #ff7f2a;
-      border: none;
-      color: #fff;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      border-radius: 6px;
-      cursor: pointer;
+      background: #ff7f2a; border: none; color: #fff;
+      padding: .75rem 1.5rem; font-size: 1rem;
+      border-radius: 6px; cursor: pointer;
       transition: background 0.2s;
     }
     #redeem:disabled {
-      background: #ccc;
-      cursor: default;
+      background: #ccc; cursor: default;
     }
     #redeem:not(:disabled):hover {
       background: #e76b1a;
@@ -59,41 +42,45 @@
     // 1) Initialize FingerprintJS
     const fpPromise = FingerprintJS.load();
 
-    // 2) Your Apps Script Web App URL (deployed “Anyone, even anonymous”)
-    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwkCuWkKic4jX-s-kKwl8fbSWCFX5KvS8hFhL1SNkhPKCpY7PNvZsl6X6VM1npqJzW59A/exec';
+    // 2) Your deployed Apps Script Web App URL (execute as "Me", access "Anyone"):
+    const WEBAPP_URL = 
+      "https://script.google.com/macros/s/AKfycbwkCuWkKic4jX-s-kKwl8fbSWCFX5KvS8hFhL1SNkhPKCpY7PNvZsl6X6VM1npqJzW59A/exec";
 
-    document.getElementById('redeem').addEventListener('click', async function() {
-      const btn = this;
-      btn.disabled = true;
-      btn.textContent = 'Loading…';
+    document.getElementById('redeem')
+      .addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Loading…';
 
-      try {
-        // 3) Get the stable visitorID
-        const fp     = await fpPromise;
-        const result = await fp.get();
-        const visitorID = result.visitorId;
+        try {
+          // 3) Get the stable visitor ID
+          const fp = await fpPromise;
+          const result = await fp.get();
+          const visitorID = result.visitorId;
 
-        // 4) Call your Apps Script endpoint
-        const resp = await fetch(`${WEBAPP_URL}?visitorID=${visitorID}`, { mode: 'cors' });
-        const data = await resp.json();
+          // 4) Call your Apps Script endpoint
+          const resp = await fetch(
+            `${WEBAPP_URL}?visitorID=${visitorID}`
+          );
+          const data = await resp.json();
 
-        // 5) Update UI based on response
-        if (data.status === 'success') {
-          btn.textContent = '✅ Redeemed!';
+          // 5) Update UI based on response
+          if (data.status === 'success') {
+            btn.textContent = '✅ Redeemed!';
+          }
+          else if (data.status === 'duplicate') {
+            btn.textContent = '⚠️ Already Claimed';
+          }
+          else {
+            console.error('Unexpected status:', data);
+            btn.textContent = '❌ Error';
+          }
         }
-        else if (data.status === 'duplicate') {
-          btn.textContent = '⚠️ Already claimed';
-        }
-        else {
-          console.error('Unexpected status:', data);
+        catch (err) {
+          console.error(err);
           btn.textContent = '❌ Error';
         }
-      }
-      catch (err) {
-        console.error(err);
-        btn.textContent = '❌ Error';
-      }
-    });
+      });
   </script>
 </body>
 </html>
