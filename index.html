@@ -6,24 +6,41 @@
   <title>Redeem Coupon</title>
   <style>
     html, body {
-      margin: 0; padding: 0;
-      height: 100%; background: #2a2a2a;
-      display: flex; align-items: center; justify-content: center;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #2a2a2a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     #card {
-      background: #fff; border-radius: 12px;
-      padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      text-align: center; width: 90%; max-width: 320px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      text-align: center;
+      width: 90%;
+      max-width: 320px;
     }
-    #card h1 { font-size: 1.25rem; margin-bottom: 1rem; color: #333; }
+    #card h1 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: #333;
+    }
     #redeem {
-      background: #ff7f2a; border: none; color: #fff;
-      padding: .75rem 1.5rem; font-size: 1rem;
-      border-radius: 6px; cursor: pointer;
-      transition: background .2s;
+      background: #ff7f2a;
+      border: none;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
     }
     #redeem:disabled {
-      background: #ccc; cursor: default;
+      background: #ccc;
+      cursor: default;
     }
     #redeem:not(:disabled):hover {
       background: #e76b1a;
@@ -38,28 +55,26 @@
 
   <!-- FingerprintJS v3 -->
   <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
-
   <script>
     // 1) Initialize FingerprintJS
     const fpPromise = FingerprintJS.load();
 
-    // 2) Your deployed Apps Script Web App URL:
+    // 2) Your Apps Script Web App URL (deployed “Anyone, even anonymous”)
     const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwkCuWkKic4jX-s-kKwl8fbSWCFX5KvS8hFhL1SNkhPKCpY7PNvZsl6X6VM1npqJzW59A/exec';
 
     document.getElementById('redeem').addEventListener('click', async function() {
       const btn = this;
-      btn.disabled     = true;
-      btn.textContent  = 'Loading…';
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
 
       try {
         // 3) Get the stable visitorID
-        const fp         = await fpPromise;
-        const result     = await fp.get();
-        const visitorID  = result.visitorId;
+        const fp     = await fpPromise;
+        const result = await fp.get();
+        const visitorID = result.visitorId;
 
         // 4) Call your Apps Script endpoint
-        const resp = await fetch(`${WEBAPP_URL}?visitorID=${visitorID}`, { mode: 'no-cors' });
-        // note: if you see network errors, remove mode:'no-cors' so you can debug CORS
+        const resp = await fetch(`${WEBAPP_URL}?visitorID=${visitorID}`, { mode: 'cors' });
         const data = await resp.json();
 
         // 5) Update UI based on response
@@ -67,11 +82,11 @@
           btn.textContent = '✅ Redeemed!';
         }
         else if (data.status === 'duplicate') {
-          btn.textContent = '⚠️ Already Claimed';
+          btn.textContent = '⚠️ Already claimed';
         }
         else {
-          btn.textContent = '❌ Error';
           console.error('Unexpected status:', data);
+          btn.textContent = '❌ Error';
         }
       }
       catch (err) {
