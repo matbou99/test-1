@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redeem Your Coupon</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1em;
+      text-align: center;
+      background: #fff;
+      color: #333;
+    }
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 0.5em;
+    }
+    h1 { margin: 0.2em 0; font-size: 1.8em; }
+    p { margin: 0.5em 0 1em; }
+    button {
+      background: #e63946;
+      color: #fff;
+      border: none;
+      border-radius: 0.4em;
+      padding: 1em 2em;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: default; }
+    .message { margin-top: 1.5em; font-size: 1.1em; }
+    .message.success { color: #2a9d8f; }
+    .message.error   { color: #e63946; }
+  </style>
+</head>
+<body>
+
+  <!-- 🍕 Pizza icon -->
+  <div class="icon">🍕</div>
+
+  <h1>Click Below to Redeem Your Coupon!</h1>
+  <p>Tap to grab your 50% off code.</p>
+
+  <button id="redeem">Redeem Coupon</button>
+  <div id="msg" class="message"></div>
+
+  <!-- FingerprintJS OSS -->
+  <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+  <script>
+    (async () => {
+      // 1) Kick off fingerprint + IP lookup in parallel
+      const fpPromise = FingerprintJS.load().then(agent => agent.get());
+      const ipPromise = fetch('https://api.ipify.org?format=json')
+        .then(r => r.json())
+        .then(d => d.ip)
+        .catch(() => 'unknown');
+
+      // 2) Await both results
+      const [{ visitorId }, ip] = await Promise.all([fpPromise, ipPromise]);
+
+      // 3) Wire up the Redeem button
+      const btn = document.getElementById('redeem');
+      const msg = document.getElementById('msg');
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        msg.textContent = 'Processing…';
+        msg.className = 'message';
+
+        // 4) POST to your Apps Script Web App
+        try {
+          const res = await fetch(
+            'https://script.google.com/macros/s/AKfycbxEPJkK2rmOPAAjc4WTRAk8wK-1ZMrirPwU1VM60Z3pmaiNiRXyfHalJWgeNcUrLzOH/exec',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({
+                fp: visitorId,
+                ip: ip
+              })
+            }
+          );
+          const json = await res.json();
+
+          if (json.success) {
+            msg.textContent = 'Success! Your code: ' + json.code;
+            msg.classList.add('success');
+          } else {
+            msg.textContent = 'Error: ' + json.message;
+            msg.classList.add('error');
+          }
+        } catch (err) {
+          msg.textContent = 'Network error. Please try again later.';
+          msg.classList.add('error');
+        }
+      });
+    })();
+  </script>
+
+</body>
+</html>
