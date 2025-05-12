@@ -21,10 +21,8 @@
     input[type="tel"] {
       font-size: 1em;
       padding: 0.5em;
-      width: 220px;
+      width: 200px;
       margin-bottom: 1em;
-      border: 1px solid #ccc;
-      border-radius: 0.2em;
     }
     button {
       background: #e63946;
@@ -35,8 +33,14 @@
       font-size: 1.1em;
       cursor: pointer;
     }
-    button:disabled { opacity: 0.6; cursor: default; }
-    .message { margin-top: 1.5em; font-size: 1.1em; }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .message {
+      margin-top: 1.5em;
+      font-size: 1.1em;
+    }
     .message.success { color: #2a9d8f; }
     .message.error   { color: #e63946; }
   </style>
@@ -45,58 +49,69 @@
 
   <!-- Pizza icon -->
   <div class="icon">🍕</div>
-
   <h1>Click Below to Redeem Your Coupon!</h1>
   <p>Enter your phone number to get your 50% off code:</p>
 
-  <input id="phoneInput" type="tel" placeholder="e.g. +1 555 123 4567" />
+  <input id="phoneInput" type="tel" placeholder="e.g. 4388200242" />
   <br>
   <button id="redeem">Redeem Coupon</button>
+
   <div id="msg" class="message"></div>
 
+  <!-- FingerprintJS OSS (optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+
   <script>
-    // ← Replace this with your Apps Script Web App URL:
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxqDUFuBDtsRapHVIHufE-7PgfxuahIFPIUZTV01SAb8Ur3cOP6wzVv4PotmAsuMTY/exec';
+    // ← Replace with your Apps Script Web App URL:
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxqDUFuBDtsRapHVIHufE-7PgfxuahIFPIUZTV01SAb8Ur3cOP6wzVv4PotmAsuMTY/exec'
 
     const btn   = document.getElementById('redeem');
-    const msg   = document.getElementById('msg');
+    const msgEl = document.getElementById('msg');
     const input = document.getElementById('phoneInput');
 
     btn.addEventListener('click', async () => {
       const phone = input.value.trim();
       if (!phone) {
-        msg.textContent = 'Please enter your phone number.';
-        msg.className = 'message error';
+        msgEl.textContent = 'Please enter your phone number.';
+        msgEl.className = 'message error';
         return;
       }
 
       btn.disabled = true;
-      msg.textContent = 'Processing…';
-      msg.className = 'message';
+      msgEl.textContent = 'Processing…';
+      msgEl.className = 'message';
 
       try {
+        // POST form-encoded
+        const form = new URLSearchParams();
+        form.append('phone', phone);
+
         const res = await fetch(SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `phone=${encodeURIComponent(phone)}`
+          body: form.toString()
         });
+
+        // handle non-JSON or HTTP error
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
         const data = await res.json();
 
         if (data.success) {
-          msg.textContent = data.code;
-          msg.className = 'message success';
+          msgEl.textContent = data.message + (data.code ? ` (${data.code})` : '');
+          msgEl.className = 'message success';
         } else {
-          msg.textContent = data.message || 'Unknown error';
-          msg.className = 'message error';
+          msgEl.textContent = data.message;
+          msgEl.className = 'message error';
         }
       } catch (err) {
-        msg.textContent = 'Network error. Please try again later.';
-        msg.className = 'message error';
+        msgEl.textContent = 'Network error. Please try again later.';
+        msgEl.className = 'message error';
+        console.error(err);
       } finally {
         btn.disabled = false;
       }
     });
   </script>
-
 </body>
 </html>
