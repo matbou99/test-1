@@ -20,14 +20,14 @@
     }
     #redeem {
       background: #ff7f2a; border: none; color: #fff;
-      padding: 0.75rem 1.5rem; font-size: 1rem;
+      padding: .75rem 1.5rem; font-size: 1rem;
       border-radius: 6px; cursor: pointer;
-      transition: background 0.2s;
+      transition: background .2s;
     }
     #redeem:disabled {
       background: #ccc; cursor: default;
     }
-    #redeem:hover:not(:disabled) {
+    #redeem:not(:disabled):hover {
       background: #e76b1a;
     }
   </style>
@@ -44,32 +44,42 @@
     // 1) Initialize FingerprintJS
     const fpPromise = FingerprintJS.load();
 
-    // 2) Your Apps Script webapp URL (make sure you've deployed with "Anyone, even anonymous")
-    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxNQQRVIvmmJUp1XVYOP26pVYQs0euVmfBigJjzuol17sYev-m9MMwe2F8UPYoVqTysJg/exec';
+    // 2) Your Apps Script Web App URL (just-published)
+    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwkCuWkKic4jX-s-kKwl8fbSWCFX5KvS8hFhL1SNkhPKCpY7PNvZsl6X6VM1npqJzW59A/exec';
 
-    // 3) Wire up the button
-    document.getElementById('redeem').addEventListener('click', async function() {
-      const btn = this;
-      btn.disabled = true;
-      btn.textContent = 'Loading…';
+    document.getElementById('redeem')
+      .addEventListener('click', async function redeem() {
+        const btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Loading…';
 
-      try {
-        // get the stable visitor ID
-        const fp = await fpPromise;
-        const result = await fp.get();
-        const visitorID = result.visitorId;
+        try {
+          // 3) Get the stable visitor ID
+          const fp = await fpPromise;
+          const result = await fp.get();
+          const visitorID = result.visitorId;
 
-        // fire it off without CORS (no JSON back)
-        const resp = await fetch(`${WEBAPP_URL}?visitorID=${visitorID}`, { mode: 'no-cors' });
+          // 4) Call your Apps Script endpoint and read JSON
+          const resp = await fetch(`${WEBAPP_URL}?visitorID=${visitorID}`);
+          const data = await resp.json();
 
-        // we can’t parse JSON in no-cors mode, but if we got here it means success
-        btn.textContent = '✔ Redeemed!';
-      }
-      catch (err) {
-        console.error(err);
-        btn.textContent = '❌ Error';
-      }
-    });
+          // 5) Update UI based on status
+          if (data.status === 'success') {
+            btn.textContent = '✅ Redeemed!';
+          }
+          else if (data.status === 'duplicate') {
+            btn.textContent = '✓ Already Claimed';
+          }
+          else {
+            console.error('Unexpected response:', data);
+            btn.textContent = '❌ Error';
+          }
+        }
+        catch (err) {
+          console.error(err);
+          btn.textContent = '❌ Error';
+        }
+      });
   </script>
 </body>
 </html>
