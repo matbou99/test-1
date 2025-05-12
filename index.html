@@ -1,86 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Redeem Coupon</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redeem Your Coupon</title>
   <style>
-    html, body {
-      margin: 0; padding: 0;
-      height: 100%; background: #2a2a2a;
-      display: flex; align-items: center; justify-content: center;
-    }
-    #card {
-      background: #fff; border-radius: 12px;
-      padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      text-align: center; width: 90%; max-width: 320px;
-    }
-    #card h1 { font-size: 1.25rem; margin-bottom: 1rem; color: #333; }
-    #redeem {
-      background: #ff7f2a; border: none; color: #fff;
-      padding: .75rem 1.5rem; font-size: 1rem;
-      border-radius: 6px; cursor: pointer;
-      transition: background 0.2s;
-    }
-    #redeem:disabled {
-      background: #ccc; cursor: default;
-    }
-    #redeem:not(:disabled):hover {
-      background: #e76b1a;
-    }
+    body { font-family: sans-serif; padding: 1em; text-align: center; }
+    button { padding: 1em 2em; font-size: 1em; border-radius: 0.3em; }
+    .message { margin-top: 1em; }
   </style>
 </head>
 <body>
-  <div id="card">
-    <h1>Click Below to Redeem Your Coupon!</h1>
-    <button id="redeem">Redeem Coupon</button>
-  </div>
+  <h1>50% Off Your Next Order</h1>
+  <p>Tap below to redeem your code.</p>
+  <button id="redeem">Redeem</button>
+  <div id="msg" class="message"></div>
 
-  <!-- FingerprintJS v3 -->
+  <!-- FingerprintJS OSS -->
   <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
   <script>
-    // 1) Initialize FingerprintJS
-    const fpPromise = FingerprintJS.load();
+    (async () => {
+      // Initialize FingerprintJS
+      const fpAgent = await FingerprintJS.load();
+      const { visitorId } = await fpAgent.get();
 
-    // 2) Your deployed Apps Script Web App URL (execute as "Me", access "Anyone"):
-    const WEBAPP_URL = 
-      "https://script.google.com/macros/s/AKfycbwkCuWkKic4jX-s-kKwl8fbSWCFX5KvS8hFhL1SNkhPKCpY7PNvZsl6X6VM1npqJzW59A/exec";
-
-    document.getElementById('redeem')
-      .addEventListener('click', async function() {
-        const btn = this;
-        btn.disabled = true;
-        btn.textContent = 'Loading…';
+      // Wire up the Redeem button
+      document.getElementById('redeem').addEventListener('click', async () => {
+        const msgEl = document.getElementById('msg');
+        msgEl.textContent = 'Processing…';
 
         try {
-          // 3) Get the stable visitor ID
-          const fp = await fpPromise;
-          const result = await fp.get();
-          const visitorID = result.visitorId;
-
-          // 4) Call your Apps Script endpoint
           const resp = await fetch(
-            `${WEBAPP_URL}?visitorID=${visitorID}`
+            'https://script.google.com/macros/s/AKfycbwwsuanlOGdtOftnh1OkTwkMB_c-PFfjtq_fBrUMijW_ngFdrhDObwQzlx8CgZmY3JD/exec',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({ fp: visitorId })
+            }
           );
-          const data = await resp.json();
+          const result = await resp.json();
 
-          // 5) Update UI based on response
-          if (data.status === 'success') {
-            btn.textContent = '✅ Redeemed!';
+          if (result.success) {
+            msgEl.innerHTML = `<strong>Success!</strong><br>Your code: <code>${result.code}</code>`;
+          } else {
+            msgEl.innerHTML = `<strong>Error:</strong> ${result.message}`;
           }
-          else if (data.status === 'duplicate') {
-            btn.textContent = '⚠️ Already Claimed';
-          }
-          else {
-            console.error('Unexpected status:', data);
-            btn.textContent = '❌ Error';
-          }
-        }
-        catch (err) {
-          console.error(err);
-          btn.textContent = '❌ Error';
+        } catch (e) {
+          msgEl.textContent = 'Network error. Please try again later.';
         }
       });
+    })();
   </script>
 </body>
 </html>
