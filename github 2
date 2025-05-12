@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redeem Your Coupon</title>
+  <style>
+    body { font-family: sans-serif; padding: 1em; text-align: center; }
+    button { padding: 1em 2em; font-size: 1em; border-radius: 0.3em; }
+    .message { margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>50% Off Your Next Order</h1>
+  <p>Tap below to redeem your code.</p>
+  <button id="redeem">Redeem</button>
+  <div id="msg" class="message"></div>
+
+  <!-- FingerprintJS OSS -->
+  <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+  <script>
+    (async () => {
+      // Initialize FingerprintJS
+      const fpAgent = await FingerprintJS.load();
+      const { visitorId } = await fpAgent.get();
+
+      // Wire up the Redeem button
+      document.getElementById('redeem').addEventListener('click', async () => {
+        const msgEl = document.getElementById('msg');
+        msgEl.textContent = 'Processing…';
+
+        try {
+          const resp = await fetch(
+            'https://script.google.com/macros/s/AKfycbwwsuanlOGdtOftnh1OkTwkMB_c-PFfjtq_fBrUMijW_ngFdrhDObwQzlx8CgZmY3JD/exec',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({ fp: visitorId })
+            }
+          );
+          const result = await resp.json();
+
+          if (result.success) {
+            msgEl.innerHTML = `<strong>Success!</strong><br>Your code: <code>${result.code}</code>`;
+          } else {
+            msgEl.innerHTML = `<strong>Error:</strong> ${result.message}`;
+          }
+        } catch (e) {
+          msgEl.textContent = 'Network error. Please try again later.';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
