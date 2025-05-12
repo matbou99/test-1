@@ -5,30 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Redeem Your Coupon</title>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 1em;
-      text-align: center;
-      background: #fff;
-      color: #333;
-    }
-    .icon {
-      font-size: 4rem;
-      margin-bottom: 0.5em;
-    }
-    h1 { margin: 0.2em 0; font-size: 1.8em; }
-    p { margin: 0.5em 0 1em; }
-    button {
-      background: #e63946;
-      color: #fff;
-      border: none;
-      border-radius: 0.4em;
-      padding: 1em 2em;
-      font-size: 1.1em;
-      cursor: pointer;
-    }
+    body      { font-family: sans-serif; padding: 1em; text-align: center; background: #fff; color: #333; }
+    .icon     { font-size: 4rem; margin-bottom: 0.5em; }
+    h1        { margin: 0.2em 0; font-size: 1.8em; }
+    p         { margin: 0.5em 0 1em; }
+    button    { background: #e63946; color: #fff; border: none; border-radius: 0.4em; padding: 1em 2em; font-size: 1.1em; cursor: pointer; }
     button:disabled { opacity: 0.6; cursor: default; }
-    .message { margin-top: 1.5em; font-size: 1.1em; }
+    .message  { margin-top: 1.5em; font-size: 1.1em; }
     .message.success { color: #2a9d8f; }
     .message.error   { color: #e63946; }
   </style>
@@ -45,51 +28,45 @@
   <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
   <script>
     (async () => {
-      // 1) Kick off fingerprint & IP requests in parallel
+      // 1) Start fingerprint + IP lookup in parallel
       const fpPromise = FingerprintJS.load().then(agent => agent.get());
       const ipPromise = fetch('https://api.ipify.org?format=json')
-        .then(r => r.json())
-        .then(d => d.ip)
+        .then(r => r.json()).then(d => d.ip)
         .catch(() => 'unknown');
 
-      // 2) Await both results
+      // 2) Await both
       const [{ visitorId }, ip] = await Promise.all([fpPromise, ipPromise]);
-      console.log('Fingerprint:', visitorId, 'IP:', ip);
 
-      // 3) Wire up the Redeem button
       const btn = document.getElementById('redeem');
       const msg = document.getElementById('msg');
 
+      // 3) On click, GET to your Apps Script Web App
       btn.addEventListener('click', async () => {
-        btn.disabled = true;
+        btn.disabled    = true;
         msg.textContent = 'Processing…';
-        msg.className = 'message';
+        msg.className   = 'message';
 
         try {
-          const resp = await fetch(
-            'https://script.google.com/macros/s/AKfycbzM44l-atVGwd3OUB8B5npya3ruAO2_XbAF0ljhf_bsB7gmXRnxSq1qIn3mbk_VPUSY/exec',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: new URLSearchParams({ fp: visitorId, ip })
-            }
-          );
+          const url = new URL('https://script.google.com/macros/s/AKfycbzlgjoYP2awibzMTGOu_itzvolgQDXI3CrPwwmRqAMPsGv0arRHR3X88pZi5iu9L-DC/exec');
+          url.searchParams.set('fp', visitorId);
+          url.searchParams.set('ip', ip);
+
+          const resp   = await fetch(url);
           const result = await resp.json();
 
           if (result.success) {
-            msg.textContent = `Success! Your code: ${result.code}`;
+            msg.innerHTML    = `<strong>Success!</strong><br>Your code: <code>${result.code}</code>`;
             msg.classList.add('success');
           } else {
-            msg.textContent = `Error: ${result.message}`;
+            msg.textContent  = `Error: ${result.message}`;
             msg.classList.add('error');
           }
-        } catch (err) {
-          msg.textContent = 'Network error. Please try again later.';
+        } catch (e) {
+          msg.textContent  = 'Network error. Please try again later.';
           msg.classList.add('error');
         }
       });
     })();
   </script>
-
 </body>
 </html>
