@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redeem Your Coupon</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1em;
+      text-align: center;
+      background: #fff;
+      color: #333;
+    }
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 0.5em;
+    }
+    h1 { margin: 0.2em 0; font-size: 1.8em; }
+    p { margin: 0.5em 0 1em; }
+    input[type="tel"] {
+      font-size: 1em;
+      padding: 0.5em;
+      width: 200px;
+      margin-bottom: 1em;
+    }
+    button {
+      background: #e63946;
+      color: #fff;
+      border: none;
+      border-radius: 0.4em;
+      padding: 1em 2em;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: default; }
+    .message { margin-top: 1.5em; font-size: 1.1em; }
+    .message.success { color: #2a9d8f; }
+    .message.error   { color: #e63946; }
+  </style>
+</head>
+<body>
+
+  <!-- 🍕 Pizza icon -->
+  <div class="icon">🍕</div>
+  <h1>Click Below to Redeem Your Coupon!</h1>
+  <p>Enter your phone number to get your 50% off code:</p>
+
+  <input id="phoneInput" type="tel" placeholder="e.g. +1 555 123 4567" />
+  <br/>
+  <button id="redeem">Redeem Coupon</button>
+  <div id="msg" class="message"></div>
+
+  <script>
+    // ←– Replace this with your Apps Script Web App URL:
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4t-6LoYVUdh9F8ovaL01--OzBMsc1qmMmVAGCkUwfD4tZ7lCHOtDZlpX4vZ9rb4Zn/exec';
+
+    const btn = document.getElementById('redeem');
+    const msg = document.getElementById('msg');
+    const input = document.getElementById('phoneInput');
+
+    btn.addEventListener('click', async () => {
+      const phone = input.value.trim();
+      if (!phone) {
+        msg.textContent = 'Please enter your phone number.';
+        msg.className = 'message error';
+        return;
+      }
+
+      btn.disabled = true;
+      msg.textContent = 'Processing…';
+      msg.className = 'message';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ phone })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          msg.textContent = data.code || 'Enjoy your code!';
+          msg.className = 'message success';
+        } else {
+          msg.textContent = data.message || 'Something went wrong.';
+          msg.className = 'message error';
+        }
+      } catch (err) {
+        msg.textContent = 'Network error. Please try again later.';
+        msg.className = 'message error';
+      }
+
+      btn.disabled = false;
+    });
+  </script>
+
+</body>
+</html>
