@@ -5,27 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Redeem Your Coupon</title>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 1em;
-      text-align: center;
-      background: #fff;
-      color: #333;
-    }
-    .icon {
-      font-size: 4rem;
-      margin-bottom: 0.5em;
-    }
+    body { font-family: sans-serif; padding: 1em; text-align: center; }
+    .icon { font-size: 4rem; margin-bottom: 0.5em; }
     h1 { margin: 0.2em 0; font-size: 1.8em; }
-    p { margin: 0.5em 0 1em; }
     button {
-      background: #e63946;
-      color: #fff;
-      border: none;
-      border-radius: 0.4em;
-      padding: 1em 2em;
-      font-size: 1.1em;
-      cursor: pointer;
+      background: #e63946; color: #fff; border: none; border-radius: 0.4em;
+      padding: 1em 2em; font-size: 1.1em; cursor: pointer;
     }
     button:disabled { opacity: 0.6; cursor: default; }
     .message { margin-top: 1.5em; font-size: 1.1em; }
@@ -44,24 +29,20 @@
   <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
   <script>
     (async () => {
-      // 1) Start both lookups simultaneously:
+      // 1) Start both lookups at once
       const fpPromise = FingerprintJS.load().then(agent => agent.get());
       const ipPromise = fetch('https://api.ipify.org?format=json')
-        .then(r => r.json())
-        .then(data => data.ip)
-        .catch(err => {
-          console.warn('IP lookup failed:', err);
-          return 'unknown';
-        });
+        .then(r => r.json()).then(d => d.ip)
+        .catch(() => 'unknown');
 
-      // 2) Wait for both to finish:
+      // 2) Wait for both
       const [{ visitorId }, ip] = await Promise.all([fpPromise, ipPromise]);
       console.log('Fingerprint:', visitorId, 'IP:', ip);
 
       const btn = document.getElementById('redeem');
       const msg = document.getElementById('msg');
 
-      // 3) Only now wire up the button so both values are ready:
+      // 3) Now wire up the button
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         msg.textContent = 'Checking…';
@@ -77,7 +58,6 @@
             }
           );
           const result = await res.json();
-
           if (result.success) {
             msg.classList.add('success');
             msg.innerHTML = `✅ Success! Your code is <strong>${result.code}</strong>`;
