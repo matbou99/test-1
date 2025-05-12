@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Redeem Your Coupon</title>
   <style>
     body {
@@ -16,10 +16,7 @@
       font-size: 4rem;
       margin-bottom: 0.5em;
     }
-    h1 {
-      margin: 0.2em 0;
-      font-size: 1.8em;
-    }
+    h1 { margin: 0.2em 0; font-size: 1.8em; }
     p { margin: 0.5em 0 1em; }
     button {
       background: #e63946;
@@ -30,23 +27,10 @@
       font-size: 1.1em;
       cursor: pointer;
     }
-    button:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-    .message {
-      margin-top: 1.5em;
-      font-size: 1.1em;
-    }
-    .message.success {
-      color: #2a9d8f;
-    }
-    .message.error {
-      color: #e63946;
-    }
-    .warning-icon {
-      margin-right: 0.3em;
-    }
+    button:disabled { opacity: 0.6; cursor: default; }
+    .message { margin-top: 1.5em; font-size: 1.1em; }
+    .message.success { color: #2a9d8f; }
+    .message.error   { color: #e63946; }
   </style>
 </head>
 <body>
@@ -60,22 +44,24 @@
   <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
   <script>
     (async () => {
-      // 1. Fingerprint
-      const fpAgent       = await FingerprintJS.load();
-      const { visitorId } = await fpAgent.get();
+      // 1) Start both lookups simultaneously:
+      const fpPromise = FingerprintJS.load().then(agent => agent.get());
+      const ipPromise = fetch('https://api.ipify.org?format=json')
+        .then(r => r.json())
+        .then(data => data.ip)
+        .catch(err => {
+          console.warn('IP lookup failed:', err);
+          return 'unknown';
+        });
 
-      // 2. Public IP
-      let ip = '';
-      try {
-        const r = await fetch('https://api.ipify.org?format=json');
-        ip = (await r.json()).ip || '';
-      } catch (e) {
-        console.warn('IP lookup failed', e);
-      }
+      // 2) Wait for both to finish:
+      const [{ visitorId }, ip] = await Promise.all([fpPromise, ipPromise]);
+      console.log('Fingerprint:', visitorId, 'IP:', ip);
 
       const btn = document.getElementById('redeem');
       const msg = document.getElementById('msg');
 
+      // 3) Only now wire up the button so both values are ready:
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         msg.textContent = 'Checking…';
@@ -97,7 +83,7 @@
             msg.innerHTML = `✅ Success! Your code is <strong>${result.code}</strong>`;
           } else {
             msg.classList.add('error');
-            msg.innerHTML = `⚠️ <span class="warning-icon"></span>Coupon already redeemed.`;
+            msg.textContent = '⚠️ Coupon already redeemed.';
           }
         } catch (e) {
           msg.classList.add('error');
