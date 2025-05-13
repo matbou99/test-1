@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta
-    name="viewport"
+  <meta 
+    name="viewport" 
     content="width=device-width,initial-scale=1,viewport-fit=cover"
   >
   <title>Redeem Your Coupon</title>
@@ -15,10 +15,11 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #fafafa;
-      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   sans-serif;
       color: #333;
+      padding: 16px;
     }
     .container {
       width: 100%;
@@ -65,28 +66,30 @@
 </head>
 <body>
   <div class="container">
-    <img
-      class="logo"
-      src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f355.png"
-      alt="Pizza slice"
+    <img 
+      class="logo" 
+      src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f355.png" 
+      alt="Pizza"
     >
     <h1>Click Below to Redeem Your Coupon!</h1>
+
     <form id="couponForm">
-      <input
-        id="phone"
-        name="phone"
-        type="tel"
-        placeholder="Enter your phone #"
+      <input 
+        id="phone" 
+        name="phone" 
+        type="tel" 
+        placeholder="Enter your phone #" 
         required
       >
       <button type="submit">Redeem Coupon</button>
     </form>
+
     <div id="message"></div>
   </div>
 
   <script>
-    // ← replace this with your Apps Script Web App URL
-    const API = 'https://script.google.com/macros/s/AKfycbyZl3rLA1sBHeQmya__Dlx9ZnAIfNnbR-DsgBhX-_J5-JMSgayvyu-uG_Rqd5Br_7ym_A/exec';
+    // Your Apps Script Web-App URL (already set):
+    const API = 'https://script.google.com/macros/s/AKfycbypTyl4fqvPESm6uCgKpI5KEmEz5Q1HPStqOTlCEkTgikn6C9___iAlhSlusAo4OLmh/exec';
 
     const form = document.getElementById('couponForm');
     const msg  = document.getElementById('message');
@@ -94,12 +97,13 @@
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const phone = document.getElementById('phone').value.trim();
-      msg.textContent = '⏳ Checking…';
-      msg.className   = '';
+      msg.textContent   = '⏳ Checking…';
+      msg.className     = '';
 
       try {
         const res  = await fetch(API + '?phone=' + encodeURIComponent(phone));
         const json = await res.json();
+
         if (json.status === 'success') {
           msg.textContent = `🎉 The code is: ${json.code} for 50% off!`;
           msg.className   = 'success';
@@ -108,9 +112,9 @@
           msg.className   = 'error';
         }
       } catch (err) {
+        console.error(err);
         msg.textContent = '⚠️ Network error';
         msg.className   = 'error';
-        console.error(err);
       }
     });
   </script>
