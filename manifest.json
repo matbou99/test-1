@@ -1,0 +1,15 @@
+{
+  "short_name": "Coupon",
+  "name": "Redeem Your Coupon",
+  "icons": [
+    {
+      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f355.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "githubphone3.html",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#e53935"
+}
