@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+  <title>Redeem Your Coupon</title>
+  <style>
+    /* Reset */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; -webkit-text-size-adjust: 100%; }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #fafafa;
+      padding: 16px;
+      color: #333;
+    }
+    .container {
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .logo {
+      width: 80px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+    }
+    form {
+      margin-bottom: 16px;
+    }
+    input[type="tel"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 16px;
+      font-size: 1rem;
+      color: #fff;
+      background: #e53935;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:active { background: #d32f2f; }
+    #message {
+      font-weight: bold;
+      margin-top: 16px;
+    }
+    #message.success { color: #388e3c; }
+    #message.error   { color: #d32f2f; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img
+      class="logo"
+      src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f355.png"
+      alt="Pizza slice"
+    >
+    <h1>Click Below to Redeem Your Coupon!</h1>
+    <form id="couponForm">
+      <input
+        id="phone"
+        name="phone"
+        type="tel"
+        placeholder="Enter your phone #"
+        required
+      >
+      <button type="submit">Redeem Coupon</button>
+    </form>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    // ← swap in your Web App URL here:
+    const API = 'https://script.google.com/macros/s/AKfycbyZl3rLA1sBHeQmya__Dlx9ZnAIfNnbR-DsgBhX-_J5-JMSgayvyu-uG_Rqd5Br_7ym_A/exec';
+
+    const form = document.getElementById('couponForm');
+    const msg  = document.getElementById('message');
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const phone = document.getElementById('phone').value.trim();
+      msg.textContent = '⏳ Checking…';
+      msg.className   = '';
+
+      try {
+        const res  = await fetch(API + '?phone=' + encodeURIComponent(phone));
+        const json = await res.json();
+        if (json.status === 'success') {
+          msg.textContent = `🎉 The code is: ${json.code} for 50% off!`;
+          msg.className   = 'success';
+        } else {
+          msg.textContent = json.message;
+          msg.className   = 'error';
+        }
+      } catch (err) {
+        msg.textContent = '⚠️ Network error';
+        msg.className   = 'error';
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
