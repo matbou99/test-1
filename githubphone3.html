@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta 
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <link rel="manifest" href="manifest.json">
+  <title>Redeem Your Coupon</title>
+  <style>
+    /* Reset */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #fafafa;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: env(safe-area-inset-top) 1em env(safe-area-inset-bottom) 1em;
+      text-align: center;
+      min-height: 100vh;
+    }
+
+    img.pizza {
+      width: 80px;
+      height: auto;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      padding: 0 0.5rem;
+    }
+
+    form {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    input[name="phone"] {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: #fff;
+      background-color: #e53935;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #d32f2f;
+    }
+
+    #message {
+      margin-top: 1.5rem;
+      padding: 0 0.5rem;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+    #message.error   { color: #e53935; }
+    #message.success { color: #388e3c; }
+  </style>
+</head>
+<body>
+  <img
+    class="pizza"
+    src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f355.png"
+    alt="Pizza slice">
+
+  <h2>Click Below to Redeem Your Coupon!</h2>
+
+  <form id="couponForm">
+    <input
+      id="phone"
+      name="phone"
+      type="tel"
+      placeholder="Enter your phone #"
+      required>
+    <button type="submit">Redeem Coupon</button>
+  </form>
+
+  <div id="message"></div>
+
+  <script>
+    // ←– replace with your actual Apps Script URL:
+    const API = 'https://script.google.com/macros/s/AKfycbwcCemmt5y0TS16XG6yIVYrUCwYVQBrXShVOVkZWdPZN2e4b1XNGp6OC_sSRYrbM2YATQ/exec';
+
+    const form = document.getElementById('couponForm');
+    const msg  = document.getElementById('message');
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const phone = document.getElementById('phone').value.trim();
+      msg.textContent = '⏳ Checking…';
+      msg.className = '';
+
+      try {
+        const res = await fetch(API + '?phone=' + encodeURIComponent(phone));
+        const json = await res.json();
+        if (json.status === 'success') {
+          msg.textContent = `🎉 The code is: ${json.code} for 50% off!`;
+          msg.className = 'success';
+        } else {
+          msg.textContent = json.message;
+          msg.className = 'error';
+        }
+      } catch (err) {
+        msg.textContent = '⚠️ Network error';
+        msg.className = 'error';
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
