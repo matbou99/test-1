@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Redeem Your Coupon</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 80%;
+      max-width: 300px;
+      margin-bottom: 1rem;
+    }
+    button {
+      background-color: #e83e3e;
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .message {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+    }
+    .error {
+      color: #e83e3e;
+    }
+    .success {
+      color: #4caf50;
+    }
+  </style>
+</head>
+<body>
+  <h1>Click Below to Redeem Your Coupon!</h1>
+  <input type="tel" id="phoneInput" placeholder="Enter your phone number" />
+  <br/>
+  <button id="redeemButton">Redeem Coupon</button>
+  <div id="message" class="message"></div>
+
+  <script>
+    // ← your deployed Apps Script URL
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbzZy1Rg50pnYIUpARQ77Zy3l6ZFcTpCj2XRG6i0D_KQCO64x3gtcdxKtIQC424ZNzDT/exec';
+
+    document.getElementById('redeemButton').onclick = () => {
+      const phone = document.getElementById('phoneInput').value.trim();
+      if (!phone) {
+        showMessage('Please enter your phone number.', 'error');
+        return;
+      }
+      showMessage('Processing...', '');
+
+      fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+      })
+      .then(r => r.json())
+      .then(json => {
+        if (json.success) {
+          showMessage(`Your coupon code is ${json.code}`, 'success');
+        } else {
+          showMessage(json.message, 'error');
+        }
+      })
+      .catch(() => showMessage('Unexpected error. Try again.', 'error'));
+    };
+
+    function showMessage(text, type) {
+      const el = document.getElementById('message');
+      el.textContent = text;
+      el.className = `message ${type}`;
+    }
+  </script>
+</body>
+</html>
